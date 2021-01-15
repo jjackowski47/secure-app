@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+  flask:
+    build: ./flask
+    container_name: flask
+    restart: always
+    volumes:
+      - ./flask:/usr/src/app
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uwsgi app.ini'
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+      POSTGRES_DB: dbtest
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    expose:
+      - 8080
+    depends_on:
+      - db
+  db:
+    image: postgres:alpine
+    container_name: db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+      POSTGRES_DB: dbtest
+      POSTGRES_HOST: localhost
+    restart: always
+    ports:
+      - "5432:5432"
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    restart: always
+    volumes:
+      - static_volume:/flask/app/static
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - flask
+
+volumes:
+  postgres_data:
+  static_volume:

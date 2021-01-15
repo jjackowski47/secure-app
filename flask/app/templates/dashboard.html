@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <title>MySecureApp</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="{{ url_for('static', filename='index.css') }}" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+    <header class="site-header">
+        <nav>
+            <div class="brand-name">
+                <a href="/">Bezpieczna aplikacja</a>
+            </div>
+            <ul>
+                {% if not 'username' in session %}
+                <li><a href="registration">Rejestracja</a></li>
+                <li><a href="/">Logowanie</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <main class="site-content">
+        <h2>Twoje notatki</h2>
+        <div class="notes">
+            {% if notes|length %}
+            <ul>
+                {% for note in notes %}
+                <li>{{note}}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </main>
+    <footer class="site-footer">
+        <hr />
+        <p>&copy; 2021 Jakub Jackowski</p>
+    </footer>
+</body>
+
+</html>

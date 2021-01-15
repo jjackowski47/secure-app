@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <title>MySecureApp</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="{{ url_for('static', filename='index.css') }}" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+    <header class="site-header">
+        <nav>
+            <div class="brand-name">
+                <a href="/">Bezpieczna aplikacja</a>
+            </div>
+            <ul>
+                <li><a href="registration">Rejestracja</a></li>
+                <li><a href="/">Logowanie</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="site-content">
+        <section class="form-section">
+            <h2>Logowanie</h2>
+            <form id="login-form" class="registration-form" action="/" method="POST">
+                <ul class="wrapper">
+                    <li class="form-row">
+                        <label for="username" class="required">Nazwa użytkownika</label>
+                        <input class="transparent-input" id="username" type="text" name="username"
+                            pattern="^[^\/;`%-]{1,30}$" autocomplete="username" required />
+                    </li>
+                    <li class="form-row">
+                        <label for="password" class="required">Hasło</label>
+                        <input class="transparent-input" id="password" type="password" name="password"
+                            autocomplete="current-password" pattern="^[^\/;`%-]{1,30}$" required />
+                    </li>
+
+                    <li class="form-row">
+                        <input id="button-reg-form" type="submit" value="Zaloguj" />
+                    </li>
+                </ul>
+            </form>
+        </section>
+        <p class="account-question">
+            Nie masz konta? <a href="/registration">Zarejestruj się.</a>
+        </p>
+        {% if status == "not logged" %}
+        <div class="register-failed">
+            <p>Nie jesteś zalogowany</p>
+        </div>
+        {% elif status == "failed" %}
+        <div class="register-failed">
+            <p>Błędne dane</p>
+        </div>
+        {% endif %}
+    </main>
+    <footer class="site-footer">
+        <hr />
+        <p>&copy; 2021 Jakub Jackowski</p>
+    </footer>
+</body>
+
+</html>
