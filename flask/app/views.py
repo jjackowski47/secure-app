@@ -1,7 +1,6 @@
 from app import app, db
 from flask import render_template, request, session, redirect, url_for
 from .models import UsersModel, PrivNotesModel, PublicNotesModel, SharedNotesModel, KnownDevicesModel, BlockedDevicesModel
-from sqlalchemy import or_
 import re
 import crypt
 from hmac import compare_digest
@@ -56,6 +55,8 @@ def index():
             db.session.commit()
         return render_template("index.html", status="failed")
     else:
+        if 'username' in session:
+            return redirect(url_for("dashboard"))
         return render_template("index.html")
 
 
@@ -77,6 +78,8 @@ def register():
         else:
             return render_template("register.html", status="failed")
     else:
+        if 'username' in session:
+            return redirect(url_for("dashboard"))  
         return render_template("register.html", status=request.args.get('status'))
 
 

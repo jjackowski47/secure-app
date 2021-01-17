@@ -16,7 +16,7 @@
     <header class="site-header">
         <nav>
             <div class="brand-name">
-                <a href="/">Bezpieczna aplikacja</a>
+                <a href="/dashboard">Bezpieczna aplikacja</a>
             </div>
             <ul>
                 <li><a href="/logout">Wyloguj</a></li>
@@ -73,6 +73,7 @@
                </section>
                <section class="main-section">
                   <form action="/add/note" method="POST">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                      <textarea name="note-input" id="note-input" cols="30" rows="10"></textarea>
                      <div class="inline">
                         <input type="radio" name="note-type" value="private" required>
@@ -91,6 +92,7 @@
                      {% endif %}
                   </form>
                   <form action="#">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                      <input type="file" name="file-input" id="file-input">
                      <input type="submit" value="Dodaj plik">
                   </form>

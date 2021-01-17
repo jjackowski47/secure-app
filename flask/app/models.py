@@ -1,4 +1,3 @@
-from sqlalchemy.sql.expression import false
 import flask_sqlalchemy
 
 db = flask_sqlalchemy.SQLAlchemy()

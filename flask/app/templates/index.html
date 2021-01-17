@@ -27,6 +27,7 @@
         <section class="form-section">
             <h2>Logowanie</h2>
             <form id="login-form" class="registration-form" action="/" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <ul class="wrapper">
                     <li class="form-row">
                         <label for="username" class="required">Nazwa użytkownika</label>
