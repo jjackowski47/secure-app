@@ -49,12 +49,16 @@
             Nie masz konta? <a href="/registration">Zarejestruj się.</a>
         </p>
         {% if status == "not logged" %}
-        <div class="register-failed">
+        <div class="msg-failed">
             <p>Nie jesteś zalogowany</p>
         </div>
         {% elif status == "failed" %}
-        <div class="register-failed">
+        <div class="msg-failed">
             <p>Błędne dane</p>
+        </div>
+        {% elif exp %}
+        <div class="msg-failed">
+            <p>Zbyt wiele prób logowania, zaloguj się ponownie o {{exp}}</p>
         </div>
         {% endif %}
     </main>

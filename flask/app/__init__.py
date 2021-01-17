@@ -10,6 +10,7 @@ app.app_context().push()
 app.secret_key = 'iyzTwzU8LMmHCVyb_L515CXZAaRtx8il'
 app.permanent_session_lifetime = 300
 db.init_app(app)
+# db.drop_all()
 db.create_all()
 
 from app import views

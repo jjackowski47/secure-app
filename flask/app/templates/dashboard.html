@@ -9,6 +9,7 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.gstatic.com" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <script src="{{ url_for('static', filename='script.js') }}" async></script>
 </head>
 
 <body>
@@ -31,7 +32,7 @@
                         {% if priv_notes|length %}
                         <ul>
                             {% for note in priv_notes %}
-                            <li>{{note}}</li>
+                            <li>{{note.content}}</li>
                             {% endfor %}
                         </ul>
                         {% endif %}
@@ -53,7 +54,7 @@
                         {% if public_notes|length %}
                         <ul>
                             {% for note in public_notes %}
-                            <li>{{note}}</li>
+                            <li>{{note.content}}</li>
                             {% endfor %}
                         </ul>
                         {% endif %}
@@ -63,7 +64,7 @@
                         {% if shared_notes|length %}
                         <ul>
                             {% for note in shared_notes %}
-                            <li>{{note}}</li>
+                            <li>{{note.content}}</li>
                             {% endfor %}
                         </ul>
                         {% endif %}
@@ -74,24 +75,32 @@
                   <form action="/add/note" method="POST">
                      <textarea name="note-input" id="note-input" cols="30" rows="10"></textarea>
                      <div class="inline">
-                        <label for="private">Prywatna</label>
                         <input type="radio" name="note-type" value="private" required>
-                        <label for="public">Publiczna</label>
+                        <label for="private">Prywatna</label>
                         <input type="radio" name="note-type" value="public" required>
+                        <label for="public">Publiczna</label>
+                        <input id="shared-checkbox" type="radio" name="note-type" value="shared" required>
                         <label for="shared">Współdzielona</label>
-                        <input type="radio" name="note-type" value="shared" required>
-                        <input type="text" name="recipient" placeholder="username" disabled>
+                        <input id="recipient-input" type="text" name="recipient" placeholder="username" disabled>
                      </div>
-                     
                      <input type="submit" value="Dodaj notatkę">
+                     {% if status == "user not found"%}
+                     <div class="msg-failed">
+                       <p>Użytkownik nie istnieje</p>
+                     </div>
+                     {% endif %}
                   </form>
                   <form action="#">
                      <input type="file" name="file-input" id="file-input">
                      <input type="submit" value="Dodaj plik">
                   </form>
                </section>
-      
-               </div>
+            </section>
+            {% if status == "new device"%}
+            <div class="msg-info">
+              <p>Zalogowano z nowego urządzenia</p>
+            </div>
+            {% endif %}
          </main>
     <footer class="site-footer">
         <hr />

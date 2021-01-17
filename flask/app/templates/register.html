@@ -49,12 +49,20 @@
             Masz już konto? <a href="/">Zaloguj się.</a>
         </p>
         {% if status == "success" %}
-        <div class="register-success">
+        <div class="msg-success">
             <p>Zarejestrowano pomyślnie</p>
         </div>
         {% elif status == "failed" %}
-        <div class="register-failed">
+        <div class="msg-failed">
             <p>Błędne dane</p>
+        </div>
+        {% elif status == "weak password" %}
+        <div class="msg-failed">
+            <p>Wprowadzone hasło jest zbyt słabe</p>
+        </div>
+        {% elif status == "username taken" %}
+        <div class="msg-failed">
+            <p>Nazwa użytkownika jest już zajęta</p>
         </div>
         {% endif %}
     </main>

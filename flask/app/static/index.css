@@ -127,14 +127,14 @@ nav ul li:hover {
   color: red;
 }
 
-.register-success,
-.register-failed {
+.msg-success,
+.msg-failed {
   display: flex;
   flex-basis: 100%;
   justify-content: center;
 }
 
-.register-success p {
+.msg-success p {
   text-align: center;
   background-color: rgb(81, 177, 26);
   padding: 10px;
@@ -142,12 +142,18 @@ nav ul li:hover {
   color: white;
 }
 
-.register-failed p {
+.msg-failed p {
   text-align: center;
   background-color: rgb(173, 45, 23);
   padding: 10px;
   border-radius: 2px;
   color: white;
+}
+
+.msg-info p {
+  margin: 0.5rem;
+  padding: 0;
+  color: rgb(23, 93, 173);
 }
 
 .account-question {
