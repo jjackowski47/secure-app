@@ -18,25 +18,81 @@
                 <a href="/">Bezpieczna aplikacja</a>
             </div>
             <ul>
-                {% if not 'username' in session %}
-                <li><a href="registration">Rejestracja</a></li>
-                <li><a href="/">Logowanie</a></li>
-                {% endif %}
+                <li><a href="/logout">Wyloguj</a></li>
             </ul>
         </nav>
     </header>
-    <main class="site-content">
-        <h2>Twoje notatki</h2>
-        <div class="notes">
-            {% if notes|length %}
-            <ul>
-                {% for note in notes %}
-                <li>{{note}}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-    </main>
+        <main class="site-content">
+            <section class="main-container">
+               <section class="main-section">
+                  <div class="side-row">
+                     <div class="private-notes">
+                        <h2>Twoje notatki</h2>
+                        {% if priv_notes|length %}
+                        <ul>
+                            {% for note in priv_notes %}
+                            <li>{{note}}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                     </div>
+                     <div class="files">
+                        <h2>Twoje pliki</h2>
+                        {% if files|length %}
+                        <ul>
+                            {% for file in files %}
+                            <li>{{file}}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                     </div>
+                  </div>
+                  <div class="side-row">
+                     <div class="public-notes">
+                        <h2>Publiczne notatki</h2>
+                        {% if public_notes|length %}
+                        <ul>
+                            {% for note in public_notes %}
+                            <li>{{note}}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                     </div>
+                     <div class="shared-notes">
+                        <h2>Współdzielone notatki</h2>
+                        {% if shared_notes|length %}
+                        <ul>
+                            {% for note in shared_notes %}
+                            <li>{{note}}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                     </div>
+                  </div>
+               </section>
+               <section class="main-section">
+                  <form action="/add/note" method="POST">
+                     <textarea name="note-input" id="note-input" cols="30" rows="10"></textarea>
+                     <div class="inline">
+                        <label for="private">Prywatna</label>
+                        <input type="radio" name="note-type" value="private" required>
+                        <label for="public">Publiczna</label>
+                        <input type="radio" name="note-type" value="public" required>
+                        <label for="shared">Współdzielona</label>
+                        <input type="radio" name="note-type" value="shared" required>
+                        <input type="text" name="recipient" placeholder="username" disabled>
+                     </div>
+                     
+                     <input type="submit" value="Dodaj notatkę">
+                  </form>
+                  <form action="#">
+                     <input type="file" name="file-input" id="file-input">
+                     <input type="submit" value="Dodaj plik">
+                  </form>
+               </section>
+      
+               </div>
+         </main>
     <footer class="site-footer">
         <hr />
         <p>&copy; 2021 Jakub Jackowski</p>
