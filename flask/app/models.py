@@ -23,10 +23,14 @@ class PrivNotesModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    nonce = db.Column(db.String())
+    salt = db.Column(db.String())
 
     def __init__(self, content, user_id):
         self.content = content
         self.user_id = user_id
+        self.nonce = None
+        self.salt = None
     
     def __repr__(self):
         return f"<PrivNote {self.id}>"
@@ -64,10 +68,12 @@ class FilesModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     file_uid = db.Column(db.String())
+    filename = db.Column(db.String())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    def __init__(self, file_uid, user_id):
+    def __init__(self, file_uid, filename, user_id):
         self.file_uid = file_uid
+        self.filename = filename
         self.user_id = user_id
     
     def __repr__(self):

@@ -127,6 +127,10 @@ nav ul li:hover {
   color: red;
 }
 
+textarea {
+  resize: none;
+}
+
 .msg-success,
 .msg-failed {
   display: flex;

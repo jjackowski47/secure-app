@@ -42,7 +42,10 @@
                         {% if files|length %}
                         <ul>
                             {% for file in files %}
-                            <li>{{file}}</li>
+                            <li><a href="/file/{{file.file_uid}}">
+                               {{file.filename}}
+                            </a>
+                           </li>
                             {% endfor %}
                         </ul>
                         {% endif %}
@@ -76,13 +79,20 @@
                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                      <textarea name="note-input" id="note-input" cols="30" rows="10"></textarea>
                      <div class="inline">
-                        <input type="radio" name="note-type" value="private" required>
+                        <input id="private-checkbox" type="radio" name="note-type" value="private" required>
                         <label for="private">Prywatna</label>
-                        <input type="radio" name="note-type" value="public" required>
-                        <label for="public">Publiczna</label>
+                        <input type="checkbox" name="encrypted" id="encrypted-checkbox" value="encrypted" disabled>
+                        <label for="encrypted">Szyfrowana</label>
+                        <input id="note-password-input" type="text" name="note-password" placeholder="Tajne hasło" disabled required>
+                     </div>
+                     <div class="inline">
                         <input id="shared-checkbox" type="radio" name="note-type" value="shared" required>
                         <label for="shared">Współdzielona</label>
-                        <input id="recipient-input" type="text" name="recipient" placeholder="username" disabled>
+                        <input id="recipient-input" type="text" name="recipient" placeholder="Użytkownik" disabled>
+                     </div>
+                     <div class="inline">
+                        <input type="radio" name="note-type" value="public" required>
+                        <label for="public">Publiczna</label>
                      </div>
                      <input type="submit" value="Dodaj notatkę">
                      {% if status == "user not found"%}
@@ -91,13 +101,29 @@
                      </div>
                      {% endif %}
                   </form>
-                  <form action="#">
+                  <form action="/add/file" method="POST" enctype="multipart/form-data">
                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                     <input type="file" name="file-input" id="file-input">
+                     <input type="file" name="file-input" id="file-input" accept=".png, .jpg, .jpeg, .pdf, .txt, .doc, .docx, .xml" required>
                      <input type="submit" value="Dodaj plik">
+                  </form>
+                  <form action="/decrypt" method="POST">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                     <textarea name="note-input" id="note-input" cols="30" rows="10" placeholder="Wprowadź tu treść zaszyfrowanej notatki"></textarea>
+                     <input id="note-password-input" type="text" name="note-password" placeholder="Tajne hasło" required>
+                     <input type="submit" value="Rozszyfruj">
                   </form>
                </section>
             </section>
+            {% if status == "password error"%}
+            <div class="msg-failed">
+              <p>Hasło w złym formacie (dozwolone znaki: a-z, A-Z, 0-9)</p>
+            </div>
+            {% endif %}
+            {% if status == "note not found"%}
+            <div class="msg-failed">
+              <p>Nie znaleziono notatki o takiej treści</p>
+            </div>
+            {% endif %}
             {% if status == "new device"%}
             <div class="msg-info">
               <p>Zalogowano z nowego urządzenia</p>

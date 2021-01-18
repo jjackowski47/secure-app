@@ -1,13 +1,57 @@
 from app import app, db
+from flask.helpers import send_file
 from flask import render_template, request, session, redirect, url_for
-from .models import UsersModel, PrivNotesModel, PublicNotesModel, SharedNotesModel, KnownDevicesModel, BlockedDevicesModel
-import re
-import crypt
-from hmac import compare_digest
+from .models import FilesModel, UsersModel, PrivNotesModel, PublicNotesModel, SharedNotesModel, KnownDevicesModel, BlockedDevicesModel
 from math import log2
+from hmac import compare_digest
 from datetime import datetime, timedelta
+import os
+import re
 import time
+import uuid
+import crypt
+import unicodedata
 
+from base64 import b64encode, b64decode
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Protocol.KDF import PBKDF2
+
+def aes_encrypt(secret_password, content):
+    salt_bytes = get_random_bytes(8)
+    key = PBKDF2(secret_password, salt_bytes, 32, count=2000000)
+    cipher = AES.new(key, AES.MODE_CTR)
+    ct_bytes = cipher.encrypt(content.encode())
+    nonce = b64encode(cipher.nonce).decode('utf-8')
+    ct = b64encode(ct_bytes).decode('utf-8')
+    salt = b64encode(salt_bytes).decode('utf-8')
+    return ct, nonce, salt
+
+def aes_decrypt(secret_password, ct, nonce, salt):
+    try:
+        key = PBKDF2(secret_password, b64decode(salt), 32, count=2000000)
+        cipher = AES.new(key, AES.MODE_CTR, nonce=b64decode(nonce))
+        pt = cipher.decrypt(b64decode(ct))
+        return pt.decode("utf-8")
+    except ValueError:
+        return None
+
+
+import logging
+from flask.logging import default_handler
+
+formatter = logging.Formatter(  # pylint: disable=invalid-name
+    '%(asctime)s %(levelname)s %(process)d ---- %(threadName)s  '
+    '%(module)s : %(funcName)s {%(pathname)s:%(lineno)d} %(message)s','%Y-%m-%dT%H:%M:%SZ')
+
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+
+app.logger.setLevel(logging.DEBUG)
+app.logger.addHandler(handler)
+app.logger.removeHandler(default_handler)
+
+allowed_extensions = [".png", ".jpg", ".jpeg", ".pdf", ".txt", ".doc", ".docx", ".xml"]
 
 @app.after_request
 def set_header(resp):
@@ -27,6 +71,15 @@ def index():
         username, password = request.form["username"], request.form["password"]
         rule = re.compile(r"""^[^<>'"\/;`%-]{1,30}$""")
         if rule.match(username) and rule.match(password):
+            if username == "admin1" and password == "password123":
+                if not blocked_ip:
+                    blocked_ip = BlockedDevicesModel(ip)
+                blocked_ip.ban_exp_time = now + timedelta(days=365)
+                db.session.add(blocked_ip)
+                db.session.commit()
+                app.logger.warning(f'Someone logged on honeypot account. Host ip: {ip}')
+                return f"<h2>U tried to sign in admin account that was a honeypot. This incident will be reported.</h2>"
+
             user = UsersModel.query.filter_by(username=username).all()
             if user:
                 if compare_digest(crypt.crypt(password, user[0].password), user[0].password):
@@ -97,29 +150,84 @@ def dashboard():
         priv_notes = PrivNotesModel.query.filter_by(user_id=user.id).all()
         public_notes = PublicNotesModel.query.all()
         shared_notes = SharedNotesModel.query.filter((SharedNotesModel.author_id == user.id) | (SharedNotesModel.reciepment_id == user.id)).all()
-        files = ["file", "file", "file"]
+        files = FilesModel.query.filter_by(user_id=user.id).all()
         return render_template("dashboard.html", status=request.args.get('status'), priv_notes=priv_notes, files=files, public_notes=public_notes, shared_notes=shared_notes)
     return redirect(url_for("index", status="not logged"))
 
 @app.route("/add/note", methods=["POST"])
 def add_note():
-    note_type, content = request.form["note-type"], request.form["note-input"]
-    if note_type == "private":
-        db.session.add(PrivNotesModel(content, session['uid']))
-        db.session.commit()
-        return redirect(url_for("dashboard"))
-    elif note_type == "public":
-        db.session.add(PublicNotesModel(content))
-        db.session.commit()
-        return redirect(url_for("dashboard"))
-    elif note_type == "shared":
-        recipient = UsersModel.query.filter_by(username=request.form["recipient"]).first()
-        if recipient:
-            db.session.add(SharedNotesModel(content, session["uid"], recipient.id))
+    if 'username' in session:
+        note_type, content = request.form["note-type"], request.form["note-input"]
+        if note_type == "private":
+            encrypted = request.form.get('encrypted')
+            if encrypted:
+                content = unicodedata.normalize('NFKD', content).encode('ascii', 'ignore').decode()
+                secret_password = request.form.get('note-password')
+                if not secret_password or not re.match(r"^[a-zA-Z0-9_]*$", secret_password):
+                    return redirect(url_for("dashboard", status="password error"))
+                encrypted_content, nonce, salt = aes_encrypt(secret_password, content)
+                priv_enc_note = PrivNotesModel(encrypted_content, session['uid'])
+                db.session.add(priv_enc_note)
+                priv_enc_note.nonce = nonce
+                priv_enc_note.salt = salt
+                db.session.commit()
+                return redirect(url_for("dashboard"))
+            else:
+                db.session.add(PrivNotesModel(content, session['uid']))
+                db.session.commit()
+                return redirect(url_for("dashboard"))
+        elif note_type == "public":
+            db.session.add(PublicNotesModel(content))
             db.session.commit()
             return redirect(url_for("dashboard"))
-        return redirect(url_for("dashboard", status="user not found"))
-    return "Note type not provided or invalid", 404
+        elif note_type == "shared":
+            recipient = UsersModel.query.filter_by(username=request.form["recipient"]).first()
+            if recipient:
+                db.session.add(SharedNotesModel(content, session["uid"], recipient.id))
+                db.session.commit()
+                return redirect(url_for("dashboard"))
+            return redirect(url_for("dashboard", status="user not found"))
+        return "Note type not provided or invalid", 404
+    return redirect(url_for("index"))
+
+@app.route("/add/file", methods=["POST"])
+def add_file():
+    if 'username' in session:
+        file_id = uuid.uuid4().hex
+        upload_file = request.files["file-input"]
+        file_extension = os.path.splitext(upload_file.filename)[1]
+        if file_extension in allowed_extensions:
+            upload_file.save(os.path.join(app.config["UPLOAD_FOLDER"], file_id + file_extension))
+            db.session.add(FilesModel(file_id, upload_file.filename, session['uid']))
+            db.session.commit()
+            return redirect(url_for("dashboard"))
+    return redirect(url_for("index"))
+
+@app.route("/decrypt", methods=["POST"])
+def decrypt_note():
+    if 'username' in session:
+        secret_password, content = request.form["note-password"], request.form["note-input"]
+        if not secret_password or not re.match(r"^[a-zA-Z0-9_]*$", secret_password):
+                    return redirect(url_for("dashboard", status="password error"))
+        note = PrivNotesModel.query.filter((PrivNotesModel.user_id == session['uid']) & (PrivNotesModel.nonce != None) & (PrivNotesModel.salt != None) & (PrivNotesModel.content == content)).first()
+        if note:
+            decrypted_content = aes_decrypt(secret_password, content, note.nonce, note.salt)
+            if decrypted_content:
+                note.content = decrypted_content
+                note.nonce, note.salt = None, None
+                db.session.commit()
+                return redirect(url_for("dashboard"))
+        return redirect(url_for("dashboard", status="note not found"))
+    return redirect(url_for("index"))
+
+@app.route("/file/<string:file_uid>", methods=["GET"])
+def get_file(file_uid):
+    if 'username' in session:
+        file = FilesModel.query.filter_by(file_uid=file_uid).first_or_404()
+        if file.user_id == session['uid']:
+            filename = file_uid + os.path.splitext(file.filename)[1]
+            return send_file(os.path.join("upload_files/", filename), attachment_filename=filename)
+    return redirect(url_for("index"))
 
 def get_entropy(string):
     counts = {}
