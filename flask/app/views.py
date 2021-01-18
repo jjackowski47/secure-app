@@ -121,7 +121,7 @@ def register():
         if rule.match(username) and rule.match(password):
             if get_entropy(password) > 3 and get_pass_strength(password) > 50:
                 if not UsersModel.query.filter_by(username=username).first():
-                    db.session.add(UsersModel(username, crypt.crypt(password)))
+                    db.session.add(UsersModel(username, crypt.crypt(password, crypt.mksalt(crypt.METHOD_SHA512, rounds=3000000))))
                     db.session.commit()
                     return render_template("register.html", status="success")
                 else:
